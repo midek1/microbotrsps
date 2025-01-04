@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group = 'net.runelite'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(dir: "${System.properties['user.home']}/.augustrunelite/repository2", include: ['*.jar'])
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
+
+}
+
+test {
+    useJUnitPlatform()
+}
