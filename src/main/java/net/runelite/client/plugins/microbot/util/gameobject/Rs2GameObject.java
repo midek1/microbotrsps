@@ -486,103 +486,103 @@ public class Rs2GameObject {
     }
 
     /**
- * Finds a reachable game object by name within a specified distance from an anchor point, optionally checking for a specific action.
- *
- * @param objectName The name of the game object to find.
- * @param exact Whether to match the name exactly or partially.
- * @param distance The maximum distance from the anchor point to search for the game object.
- * @param anchorPoint The point from which to measure the distance.
- * @param checkAction Whether to check for a specific action on the game object.
- * @param action The action to check for if checkAction is true.
- * @return The nearest reachable game object that matches the criteria, or null if none is found.
- */
-public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint, boolean checkAction, String action) {
-    List<GameObject> gameObjects = getGameObjectsWithinDistance(distance, anchorPoint);
-    if (gameObjects == null) {
-        return null;
+     * Finds a reachable game object by name within a specified distance from an anchor point, optionally checking for a specific action.
+     *
+     * @param objectName  The name of the game object to find.
+     * @param exact       Whether to match the name exactly or partially.
+     * @param distance    The maximum distance from the anchor point to search for the game object.
+     * @param anchorPoint The point from which to measure the distance.
+     * @param checkAction Whether to check for a specific action on the game object.
+     * @param action      The action to check for if checkAction is true.
+     * @return The nearest reachable game object that matches the criteria, or null if none is found.
+     */
+    public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint, boolean checkAction, String action) {
+        List<GameObject> gameObjects = getGameObjectsWithinDistance(distance, anchorPoint);
+        if (gameObjects == null) {
+            return null;
+        }
+
+        return gameObjects.stream()
+                .filter(Rs2GameObject::isReachable)
+                .filter(gameObject -> {
+                    try {
+                        ObjectComposition objComp = convertGameObjectToObjectComposition(gameObject);
+                        if (objComp == null) return false;
+
+                        String compName = objComp.getName();
+                        if (compName == null || "null".equals(compName)) {
+                            if (objComp.getImpostor() != null) {
+                                compName = objComp.getImpostor().getName();
+                            } else {
+                                return false;
+                            }
+                        }
+
+                        if (compName == null) return false;
+
+                        if (checkAction) {
+                            if (!hasAction(objComp, action)) return false;
+                        }
+
+                        if (exact) {
+                            return compName.equalsIgnoreCase(objectName);
+                        } else {
+                            return compName.toLowerCase().contains(objectName.toLowerCase());
+                        }
+
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }).min(Comparator.comparingInt(o -> Rs2Player.getRs2WorldPoint().distanceToPath(o.getWorldLocation())))
+                .orElse(null);
     }
 
-    return gameObjects.stream()
-            .filter(Rs2GameObject::isReachable)
-            .filter(gameObject -> {
-                try {
-                    ObjectComposition objComp = convertGameObjectToObjectComposition(gameObject);
-                    if (objComp == null) return false;
+    /**
+     * Finds a reachable game object by name within a specified distance from an anchor point.
+     *
+     * @param objectName  The name of the game object to find.
+     * @param exact       Whether to match the name exactly or partially.
+     * @param distance    The maximum distance from the anchor point to search for the game object.
+     * @param anchorPoint The point from which to measure the distance.
+     * @return The nearest reachable game object that matches the criteria, or null if none is found.
+     */
+    public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint) {
+        List<GameObject> gameObjects = getGameObjectsWithinDistance(distance, anchorPoint);
+        if (gameObjects == null) {
+            return null;
+        }
 
-                    String compName = objComp.getName();
-                    if (compName == null || "null".equals(compName)) {
-                        if (objComp.getImpostor() != null) {
-                            compName = objComp.getImpostor().getName();
-                        } else {
-                            return false;
+        return gameObjects.stream()
+                .filter(Rs2GameObject::isReachable)
+                .sorted(Comparator.comparingInt(o -> Rs2Player.getRs2WorldPoint().distanceToPath(o.getWorldLocation())))
+                .filter(gameObject -> {
+                    try {
+                        ObjectComposition objComp = convertGameObjectToObjectComposition(gameObject);
+                        if (objComp == null) return false;
+
+                        String compName = objComp.getName();
+                        if (compName == null || "null".equals(compName)) {
+                            if (objComp.getImpostor() != null) {
+                                compName = objComp.getImpostor().getName();
+                            } else {
+                                return false;
+                            }
                         }
+
+                        if (compName == null) return false;
+
+                        if (exact) {
+                            return compName.equalsIgnoreCase(objectName);
+                        } else {
+                            return compName.toLowerCase().contains(objectName.toLowerCase());
+                        }
+                    } catch (Exception e) {
+                        return false;
                     }
-
-                    if (compName == null) return false;
-
-                    if (checkAction) {
-                        if (!hasAction(objComp, action)) return false;
-                    }
-
-                    if (exact) {
-                        return compName.equalsIgnoreCase(objectName);
-                    } else {
-                        return compName.toLowerCase().contains(objectName.toLowerCase());
-                    }
-
-                } catch (Exception e) {
-                    return false;
-                }
-            }).min(Comparator.comparingInt(o -> Rs2Player.getRs2WorldPoint().distanceToPath(o.getWorldLocation())))
-            .orElse(null);
-}
-
-/**
- * Finds a reachable game object by name within a specified distance from an anchor point.
- *
- * @param objectName The name of the game object to find.
- * @param exact Whether to match the name exactly or partially.
- * @param distance The maximum distance from the anchor point to search for the game object.
- * @param anchorPoint The point from which to measure the distance.
- * @return The nearest reachable game object that matches the criteria, or null if none is found.
- */
-public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint) {
-    List<GameObject> gameObjects = getGameObjectsWithinDistance(distance, anchorPoint);
-    if (gameObjects == null) {
-        return null;
+                })
+                .findFirst()
+                .orElse(null);
     }
-
-    return gameObjects.stream()
-            .filter(Rs2GameObject::isReachable)
-            .sorted(Comparator.comparingInt(o -> Rs2Player.getRs2WorldPoint().distanceToPath(o.getWorldLocation())))
-            .filter(gameObject -> {
-                try {
-                    ObjectComposition objComp = convertGameObjectToObjectComposition(gameObject);
-                    if (objComp == null) return false;
-
-                    String compName = objComp.getName();
-                    if (compName == null || "null".equals(compName)) {
-                        if (objComp.getImpostor() != null) {
-                            compName = objComp.getImpostor().getName();
-                        } else {
-                            return false;
-                        }
-                    }
-
-                    if (compName == null) return false;
-
-                    if (exact) {
-                        return compName.equalsIgnoreCase(objectName);
-                    } else {
-                        return compName.toLowerCase().contains(objectName.toLowerCase());
-                    }
-                } catch (Exception e) {
-                    return false;
-                }
-            })
-            .findFirst()
-            .orElse(null);
-}
 
 
     public static boolean hasAction(ObjectComposition objComp, String action) {
@@ -681,55 +681,136 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
         return null;
     }
 
-    public static boolean handleTeleportInterface(String category, String teleport) {
-        if (Rs2Widget.getWidget(2005, 13) == null) {
+    public static boolean handleNexus(String category, String teleport) {
 
-            Rs2Item portablePortal = Rs2Inventory.get(63353);
-            if (portablePortal != null) {
-                Rs2Inventory.interact(portablePortal, "Teleport");
-            } else {
-                GameObject portalNexus = Rs2GameObject.findObjectById(65527, 2236);
-                if (portalNexus != null && Rs2Player.getWorldLocation().distanceTo(portalNexus.getWorldLocation()) < 20) {
-                    Rs2GameObject.interact(portalNexus, "Teleport");
-                } else {
-                    Rs2Magic.teleportHome();
-                    Rs2GameObject.interact(Rs2GameObject.findObjectById(65527, 2236));
-                }
+        boolean portablePortal = Rs2Inventory.contains(63353);
+        if (portablePortal) {
+            Rs2Inventory.interact(Rs2Inventory.get(63353));
+        } else {
+            if (!Rs2GameObject.interact(Rs2GameObject.findObjectById(65527, 2236))) {
+                Rs2Magic.teleportHome();
+                return false;
             }
-            sleepUntil(() -> Rs2Widget.getWidget(2005, 13) != null);
         }
 
-        Widget title = Rs2Widget.getWidget(2005, 13);
-        if (title == null) return false;
-
-        if (!title.getText().contains(category)) {
-            Rs2Widget.clickWidget(Rs2Widget.searchChildren(category, Rs2Widget.getWidget(2005, 15), false));
-            sleepUntil(() -> Rs2Widget.getWidget(2005, 13).getText().contains(category));
-        }
-
-        Rectangle teleportBoxBounds = Rs2Widget.getWidget(2005, 55).getBounds();
-        Rectangle teleportButtonBounds = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds();
-        if (teleportBoxBounds == null || teleportButtonBounds == null)
+        //wait until the interface pops up
+        if (!Rs2Widget.sleepUntilHasWidgetText("", 2005, 13, false, 20000))
             return false;
 
-        if (!Rs2UiHelper.isRectangleWithinRectangle(teleportBoxBounds, teleportButtonBounds)) {
-            sleepUntil(() -> Rs2UiHelper.isRectangleWithinRectangle(Rs2Widget.getWidget(2005, 55).getBounds(), Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds()),
-                    () -> Microbot.getMouse().scrollDown(Rs2UiHelper.getClickingPoint(Rs2Widget.getWidget(2005, 55).getBounds().getBounds(),true)),
-                    5000, 100);
+        //switch categories if necessary
+        if (!Rs2Widget.hasWidgetText(category, 2005, 13, false)) {
+            Widget categoriesWidget = Rs2Widget.getWidget(2005, 15);
+            if (categoriesWidget == null) return false;
+
+            Widget categoryWidget = Rs2Widget.searchChildren(category, categoriesWidget, false);
+            if (categoryWidget == null) return false;
+
+            Rs2Widget.clickWidget(categoryWidget);
+            if (!Rs2Widget.sleepUntilHasWidgetText(category, 2005, 15, false, 1000))
+                return false;
         }
 
-        sleep(500);
-        Widget nexusTeleport = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()));
-        if (!nexusTeleport.getText().toLowerCase().contains(teleport.toLowerCase()))
+        //make sure the teleport is in the new list
+        if (!Rs2Widget.sleepUntilHasWidgetText(teleport, 2005, 57, true, 1000))
             return false;
 
-        if (Rs2Widget.clickWidget(nexusTeleport)) {
-            sleep(600);
-            Rs2Player.waitForAnimation(1200);
-            return true;
+        //some bastardization to scroll down to the necessary teleport
+        Rectangle teleportList = Rs2Widget.getWidget(2005, 55).getBounds();
+        Rectangle specifiedTeleport = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds();
+
+        if (!Rs2UiHelper.isRectangleWithinRectangle(teleportList, specifiedTeleport)) {
+            if (!sleepUntil(() -> Rs2UiHelper.isRectangleWithinRectangle(teleportList, Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds()),
+                    () -> Microbot.getMouse().scrollDown(Rs2UiHelper.getClickingPoint(Rs2Widget.getWidget(2005, 55).getBounds(), true)),
+                    5000, 100))
+                return false;
         }
 
-        return false;
+        //for some reason it will click the wrong teleport without this
+        sleep(250);
+
+        //click the required teleport
+        if (!Rs2Widget.clickWidget(Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()))))
+            return false;
+
+        //sleep until the teleport is done
+        sleep(600);
+        Rs2Player.waitForAnimation(1200);
+        return true;
+    }
+
+    public static boolean handleTeleportInterface(String category, String teleport) {
+        try {
+            Microbot.log("Crashtest1");
+            if (Rs2Widget.getWidget(2005, 13) == null) {
+
+                Rs2Item portablePortal = Rs2Inventory.get(63353);
+                if (portablePortal != null) {
+                    Rs2Inventory.interact(portablePortal, "Teleport");
+                } else {
+                    GameObject portalNexus = Rs2GameObject.findObjectById(65527, 2236);
+                    if (portalNexus != null && Rs2Player.getWorldLocation().distanceTo(portalNexus.getWorldLocation()) < 20) {
+                        Rs2GameObject.interact(portalNexus, "Teleport");
+                    } else {
+                        Rs2Magic.teleportHome();
+                        Rs2GameObject.interact(Rs2GameObject.findObjectById(65527, 2236));
+                    }
+                }
+                sleepUntil(() -> Rs2Widget.getWidget(2005, 13) != null, 10000);
+            }
+
+            Microbot.log("Crashtest2");
+            Widget title = Rs2Widget.getWidget(2005, 13);
+            if (title == null) return false;
+
+            String titleText = title.getText();
+            if (titleText == null) return false;
+
+            Microbot.log("Crashtest3");
+            if (!title.getText().contains(category)) {
+                Widget categoryParent = Rs2Widget.getWidget(2005, 15);
+                if (categoryParent == null) return false;
+
+                Widget selectedCategory = Rs2Widget.searchChildren(category, categoryParent, false);
+                if (selectedCategory == null) return false;
+
+                if (!Rs2Widget.clickWidget(selectedCategory)) return false;
+
+                sleepUntil(() -> Rs2Widget.getWidget(2005, 13).getText().contains(category));
+            }
+
+            Microbot.log("Crashtest4");
+            Rectangle teleportBoxBounds = Rs2Widget.getWidget(2005, 55).getBounds();
+            Rectangle teleportButtonBounds = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds();
+            if (teleportBoxBounds == null || teleportButtonBounds == null)
+                return false;
+
+            Microbot.log("Crashtest5");
+            if (!Rs2UiHelper.isRectangleWithinRectangle(teleportBoxBounds, teleportButtonBounds)) {
+                sleepUntil(() -> Rs2UiHelper.isRectangleWithinRectangle(Rs2Widget.getWidget(2005, 55).getBounds(), Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds()),
+                        () -> Microbot.getMouse().scrollDown(Rs2UiHelper.getClickingPoint(Rs2Widget.getWidget(2005, 55).getBounds(), true)),
+                        5000, 100);
+            }
+
+            Microbot.log("Crashtest6");
+            sleep(500);
+            Widget nexusTeleport = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()));
+            if (!nexusTeleport.getText().toLowerCase().contains(teleport.toLowerCase()))
+                return false;
+
+            Microbot.log("Crashtest7");
+            if (Rs2Widget.clickWidget(nexusTeleport)) {
+                sleep(600);
+                Rs2Player.waitForAnimation(1200);
+                return true;
+            }
+
+            Microbot.log("Crashtest8");
+            return false;
+        } catch (Exception e) {
+            Microbot.log("error");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static GameObject findChest() {
@@ -803,7 +884,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
         return null;
     }
 
-    @Deprecated(since="1.5.7 - use signature with Integer[] ids", forRemoval = true)
+    @Deprecated(since = "1.5.7 - use signature with Integer[] ids", forRemoval = true)
     public static TileObject findObject(List<Integer> ids) {
         for (int id : ids) {
             TileObject object = findObjectById(id);
@@ -829,6 +910,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
     /**
      * Finds the closest matching object id
      * The reason we take the closest matching is to avoid interacting with an object that is to far away
+     *
      * @param ids
      * @return
      */
@@ -1241,7 +1323,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
 
     private static boolean clickObject(TileObject object, String action) {
         if (object == null) return false;
-        if (Microbot.getClient().getLocalPlayer().getWorldLocation().distanceTo(object.getWorldLocation()) > 51) {
+        if (Microbot.getClient().getLocalPlayer().getWorldLocation().distanceTo(object.getWorldLocation()) > 20) {
             Microbot.log("Object with id " + object.getId() + " is not close enough to interact with. Walking to the object....");
             Rs2Walker.walkTo(object.getWorldLocation());
             return false;
@@ -1427,6 +1509,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
 
     /**
      * Returns the object is reachable from the player
+     *
      * @param tileObject
      * @return boolean
      */
@@ -1447,10 +1530,8 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
         return walkableInteractPoint != null;
     }
 
-    public static WorldArea getWorldArea(GameObject gameObject)
-    {
-        if (!gameObject.getLocalLocation().isInScene())
-        {
+    public static WorldArea getWorldArea(GameObject gameObject) {
+        if (!gameObject.getLocalLocation().isInScene()) {
             return null;
         }
 
@@ -1463,7 +1544,6 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
                 gameObject.getLocalLocation().getX() + (gameObject.sizeX() - 1) * Perspective.LOCAL_TILE_SIZE / 2,
                 gameObject.getLocalLocation().getY() + (gameObject.sizeY() - 1) * Perspective.LOCAL_TILE_SIZE / 2
         );
-
 
 
         return new Rs2WorldArea(
@@ -1480,7 +1560,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
      */
     public static boolean hoverOverObject(TileObject object) {
         if (!Rs2AntibanSettings.naturalMouse) {
-            if(Rs2AntibanSettings.devDebug)
+            if (Rs2AntibanSettings.devDebug)
                 Microbot.log("Natural mouse is not enabled, can't hover");
             return false;
         }

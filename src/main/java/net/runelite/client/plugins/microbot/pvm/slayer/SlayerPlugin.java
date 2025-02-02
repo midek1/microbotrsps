@@ -3,6 +3,8 @@ package net.runelite.client.plugins.microbot.pvm.slayer;
 import com.google.inject.Provides;
 import custom.UpdateSlayerInfoScript;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -63,6 +65,12 @@ public class SlayerPlugin extends Plugin {
         attackStyleScript.shutdown();
         buryScatterScript.shutdown();
         overlayManager.remove(slayerOverlay);
+    }
+
+    @Subscribe
+    private void onChatMessage(ChatMessage event) {
+        //if (event.getType().equals(ChatMessageType.GAMEMESSAGE) && event.getMessage().contains("Oh dear, you are dead!"))
+            //SlayerScript.setState(SlayerState.TRAVELLING);
     }
 
 }

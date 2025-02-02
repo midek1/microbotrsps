@@ -118,7 +118,7 @@ public class Rs2Bank {
                     Microbot.showMessage("Your bankpin is empty. Please fill this field in your runelite profile.");
                     return false;
                 }*/
-                handleBankPin("");
+                handleBankPin("1873");
             } catch (Exception e) {
                 System.out.println("Something went wrong handling bankpin");
             }

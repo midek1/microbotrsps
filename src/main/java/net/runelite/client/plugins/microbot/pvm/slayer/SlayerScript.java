@@ -1,20 +1,24 @@
 package net.runelite.client.plugins.microbot.pvm.slayer;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.runelite.api.GameObject;
-import net.runelite.api.NPC;
+import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
+import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.event.KeyEvent;
@@ -24,12 +28,16 @@ import java.util.concurrent.TimeUnit;
 public class SlayerScript extends Script {
 
     @Getter
+    @Setter
     private static SlayerState state = SlayerState.GETTING_TASK;
 
     public boolean run() {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn() || !super.run() || Microbot.pauseAllScripts) return;
+
+                if (Rs2Inventory.containsAll(ItemID.LOOP_HALF_OF_KEY, ItemID.TOOTH_HALF_OF_KEY))
+                    Rs2Inventory.combine(ItemID.LOOP_HALF_OF_KEY, ItemID.TOOTH_HALF_OF_KEY);
 
                 switch (state) {
                     case FIGHTING:
@@ -39,17 +47,7 @@ public class SlayerScript extends Script {
                         getTask();
                         break;
                     case TRAVELLING:
-                        String category = "Slayer";
-                        if (Microbot.slayerTask.equalsIgnoreCase("Hobgoblins") || Microbot.slayerTask.equalsIgnoreCase("Black Knights")) {
-                            category = "Training";
-                        }
-                        if (Microbot.slayerTask.equalsIgnoreCase("Rock crab")) {
-                            Rs2GameObject.handleTeleportInterface("Training", "Rock Crabs");
-                        } else {
-                            Rs2GameObject.handleTeleportInterface(category, Microbot.slayerTask);
-                        }
-                        sleep(2000);
-                        state = SlayerState.FIGHTING;
+                        handleTravel();
                         break;
                 }
 
@@ -60,74 +58,156 @@ public class SlayerScript extends Script {
         return true;
     }
 
-    private boolean needsTask() {
-        return Microbot.slayerTask == null || Microbot.slayerTask.equalsIgnoreCase("");
-    }
-
-    private boolean isHome() {
-        return Rs2Player.isNearArea(new WorldPoint(2229, 3319, 0), 20);
-    }
-
     private void handleFighting() {
-        if (needsTask()) state = SlayerState.GETTING_TASK;
-
-        if (Rs2Player.getHealthPercentage() == 0 || Rs2Player.isMoving()) return;
-
-        String task = Microbot.slayerTask;
-        if (task.equalsIgnoreCase("Ethereal Beings"))
-            task = "Ahrim the Blighted";
-        else if (task.equalsIgnoreCase("jellies"))
-            task = "Jelly";
-
-        if (task.endsWith("s")) {
-            task = task.substring(0, task.length() - 1);
+        if (needsTask()) {
+            Rs2Prayer.disableAllPrayers();
+            state = SlayerState.GETTING_TASK;
         }
 
-        NPC taskNpc = Rs2Npc.getNpc(task, false);
-        if (taskNpc == null) {
+        if (Rs2Player.getBoostedSkillLevel(Skill.HITPOINTS) == 0) {
+            sleepUntil(this::isHome);
             state = SlayerState.TRAVELLING;
             return;
         }
 
-        if (task.equalsIgnoreCase("Infernal mage")) {
-            Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
-        } else {
-            Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
-        }
+        String taskNpc = npcNameFromTask();
 
+        handlePrayer(taskNpc);
+        handleTaskEquipment(taskNpc);
         Rs2Player.drinkPrayerPotionAt(10);
 
-        if (Rs2Player.isInteracting() || Microbot.getClient().getLocalPlayer().getInteracting() != null)
+        if (Rs2Player.isInteracting() || Rs2Player.isMoving())
             return;
 
         if (Rs2Npc.attack(taskNpc))
-            sleep(1000);
+            sleep(3000);
+    }
+
+    private void handlePrayer(String npc) {
+        switch (npc) {
+            case "infernal mage":
+            case "aberrant spectre":
+                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
+                break;
+            default:
+                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
+                break;
+        }
+    }
+
+    private void handleTaskEquipment(String npc) {
+        if (npc.contains("Dragon")) {
+            if (!Rs2Equipment.isWearing(1540) && Rs2Inventory.contains(1540)) {
+                Rs2Inventory.equip(1540);
+                Rs2Inventory.waitForInventoryChanges(1200);
+                return;
+            }
+        }
+
+        if (!Rs2Equipment.isWearing("defender", false) && Rs2Inventory.hasItem("defender", false)) {
+            Rs2Inventory.equip(Rs2Inventory.get("defender", false).getName());
+            Rs2Inventory.waitForInventoryChanges(1200);
+        }
+    }
+
+    private String npcNameFromTask() {
+        String task = Microbot.slayerTask;
+
+        //handle edge cases and format task name to singular
+        if (task.equalsIgnoreCase("Ethereal Beings")) task = "Dharok the Wretched";
+        else if (task.equalsIgnoreCase("Jellies")) task = "Jelly";
+        else if (task.equalsIgnoreCase("Giants")) task = "Cyclops";
+        else if (task.endsWith("s") && !task.equalsIgnoreCase("Cyclops")) task = task.substring(0, task.length() - 1);
+
+        return task;
+    }
+
+    private void handleTravel() {
+        String category = "Slayer";
+        String task = Microbot.slayerTask;
+
+        if (task.equalsIgnoreCase("Giants")) {
+            handleCyclops();
+            return;
+        }
+
+        if (task.equalsIgnoreCase("Hobgoblins") || task.equalsIgnoreCase("Black Knights")
+                || task.equalsIgnoreCase("Rock crab"))
+            category = "Training";
+
+        if (task.equalsIgnoreCase("Rock crab"))
+            task = "Rock Crabs";
+
+
+        if (!Rs2GameObject.handleNexus(category, task)) return;
+
+        if (task.equalsIgnoreCase("Iron dragons")) {
+            WorldPoint playerLoc = Rs2Player.getWorldLocation();
+            Rs2Walker.walkTo(new WorldPoint(playerLoc.getX(), playerLoc.getY() - 10, playerLoc.getPlane()));
+            Rs2Player.waitForWalking();
+        } else if (task.equalsIgnoreCase("Aberrant Spectres")) {
+            Rs2Walker.walkTo(new WorldPoint(2455, 9791, 0));
+            Rs2Player.waitForWalking();
+        }
+
+        sleep(1000);
+        state = SlayerState.FIGHTING;
+    }
+
+    private void handleCyclops() {
+        if (!Rs2GameObject.handleNexus("Training", "Cyclopes"))
+            return;
+        sleep(1000);
+        Rs2GameObject.interact(24318, "Open");
+        Rs2Player.waitForWalking();
+        Rs2Walker.walkTo(new WorldPoint(2845, 3541, 0));
+        Rs2GameObject.interact(16671, "Climb-up");
+        sleepUntil(() -> Rs2Player.getWorldLocation().getPlane() == 1);
+        Rs2GameObject.interact(16672, "Climb-up");
+        sleep(1500);
+        Rs2GameObject.interact(24306, "Open");
+        Rs2Player.waitForWalking();
+        state = SlayerState.FIGHTING;
     }
 
     private void getTask() {
-        if (needsTask()) {
-            if (!isHome())
-                Rs2Magic.teleportHome();
+        if (!needsTask()) {
+            state = SlayerState.TRAVELLING;
+            return;
+        }
 
+        if (!isHome()) {
+            Rs2Magic.teleportHome();
+            return;
+        }
+
+        int currentPrayer = Rs2Player.getBoostedSkillLevel(Skill.PRAYER);
+        int maxPrayer = Rs2Player.getRealSkillLevel(Skill.PRAYER);
+        if (currentPrayer < maxPrayer * .75) {
             GameObject prayerAltar = Rs2GameObject.findObjectById(409, 2230);
             if (prayerAltar != null) {
                 Rs2GameObject.interact(prayerAltar, "Pray-at");
-                sleepUntil(() -> Rs2Player.getBoostedSkillLevel(Skill.PRAYER) >= Rs2Player.getRealSkillLevel(Skill.PRAYER));
-            }
-
-            Rs2Npc.interact(getSlayerMasterId(), "Assignment");
-            sleep(800, 1200);
-            Widget randomButton = Rs2Widget.searchChildren("Random", Rs2Widget.getWidget(219, 1), true);
-            if (randomButton != null) {
-                Rs2Keyboard.keyPress((char) KeyEvent.VK_2);
-                sleep(1200);
+                sleepUntil(() -> Rs2Player.getBoostedSkillLevel(Skill.PRAYER) >= maxPrayer);
             }
         }
-        state = SlayerState.TRAVELLING;
+
+        Rs2Npc.interact(getSlayerMasterId(), "Assignment");
+        sleep(800, 1200);
+        Widget randomButton = Rs2Widget.searchChildren("Random", Rs2Widget.getWidget(219, 1), true);
+        if (randomButton != null) {
+            Rs2Keyboard.keyPress((char) KeyEvent.VK_2);
+            sleep(1200);
+        }
     }
 
     private int getSlayerMasterId() {
         int slayerLevel = Rs2Player.getBoostedSkillLevel(Skill.SLAYER);
+
+        int streak = Microbot.slayerStreak;
+        if ((streak + 1) % 10 != 0 && (streak + 1) % 25 != 0) {
+            return 13433;
+        }
+
         if (slayerLevel >= 65) {
             return 6797;
         } else if (slayerLevel >= 45) {
@@ -135,6 +215,14 @@ public class SlayerScript extends Script {
         } else {
             return 13433;
         }
+    }
+
+    private boolean needsTask() {
+        return Microbot.slayerTask == null || Microbot.slayerTask.equalsIgnoreCase("");
+    }
+
+    private boolean isHome() {
+        return Rs2Player.isNearArea(new WorldPoint(2229, 3319, 0), 20);
     }
 
     @Override

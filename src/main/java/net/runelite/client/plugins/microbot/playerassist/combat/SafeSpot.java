@@ -59,15 +59,7 @@ public class SafeSpot extends Script {
 
                 messageShown = false;
 
-                if (Microbot.slayerTask != null) {
-                    String task = Microbot.slayerTask;
-                    if (task.endsWith("s")) {
-                        task = task.substring(0, task.length() - 1);
-                    }
-                    Rs2GameObject.handleTeleportInterface("Slayer", task);
-                } else {
-                    Rs2Walker.walkFastCanvas(currentSafeSpot);
-                }
+                Rs2Walker.walkFastCanvas(currentSafeSpot);
                 Microbot.pauseAllScripts = true;
                 sleepUntil(() -> isPlayerAtSafeSpot(currentSafeSpot));
                 Microbot.pauseAllScripts = false;

@@ -29,9 +29,6 @@ public class ChopperScript extends Script {
                 if (!Microbot.isLoggedIn() || !super.run() || Rs2Player.isAnimating(1200) || Rs2Player.isWalking() || Microbot.pauseAllScripts)
                     return;
 
-                if (Microbot.canPrestige(Skill.WOODCUTTING))
-                    shutdown();
-
                 if (Rs2Inventory.isFull())
                     sleepUntil((() -> !Rs2Inventory.hasUnNotedItem("logs", false)), () -> {
                         Rs2Inventory.use(Rs2Inventory.getUnNotedItem("logs", false));
@@ -61,7 +58,7 @@ public class ChopperScript extends Script {
             return;
         }
 
-        Rs2GameObject.handleTeleportInterface("Bosses", "Olympian raids");
+        Rs2GameObject.handleNexus("Bosses", "Olympian raids");
         if (Rs2GameObject.interact(Rs2GameObject.findObjectById(65411, 2212))) {
             sleepUntil(() -> Rs2Player.getWorldLocation().distanceTo(MAHOGANY_POINT) <= 3, 20000);
             Rs2Walker.walkTo(MAHOGANY_POINT, 0);
@@ -80,7 +77,7 @@ public class ChopperScript extends Script {
             return;
         }
 
-        Rs2GameObject.handleTeleportInterface("Skilling", "Woodcutting");
+        Rs2GameObject.handleNexus("Skilling", "Woodcutting");
     }
 
     @Override

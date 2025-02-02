@@ -27,7 +27,6 @@ public class PlayerAssistInfoOverlay extends OverlayPanel {
             panelComponent.setPreferredSize(new Dimension(250, 400));
             panelComponent.getChildren().add(TitleComponent.builder().text("\uD83E\uDD86 AIO Fighter \uD83E\uDD86").color(Color.ORANGE).build());
             panelComponent.getChildren().add(LineComponent.builder().left("Play Style: " + config.playStyle() + "(" + config.playStyle().getPrimaryTickInterval() + "," + config.playStyle().getSecondaryTickInterval() + ")").right("Attack cooldown: " + PlayerAssistPlugin.getCooldown()).build());
-            panelComponent.getChildren().add(LineComponent.builder().left("Slayer task: " + Microbot.slayerTask).build());
             panelComponent.getChildren().add(LineComponent.builder().left(Microbot.status).right("Version:" + PlayerAssistPlugin.version).build());
 
 

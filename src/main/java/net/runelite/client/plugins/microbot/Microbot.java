@@ -74,7 +74,6 @@ public class Microbot {
     public static int runEnergyThreshold = 1000;
     public static int donatorAmount = 0;
     public static Map<String, Integer> augustTimers = new HashMap<>();
-    public static Map<Integer, Integer> prestigeLevels = new HashMap<>();
     @Getter
     @Setter
     public static NaturalMouse naturalMouse;
@@ -136,19 +135,11 @@ public class Microbot {
     public static int cantReachTargetRetries = 0;
 
     public static String slayerTask = null;
+    public static int taskRemaining = 0;
+    public static int slayerStreak = 0;
 
     @Getter
     public static HashMap<String, Integer> scriptRuntimes = new HashMap<>();
-
-    public static boolean canPrestige(Skill skill) {
-        if (prestigeLevels.isEmpty()) return false;
-
-        int prestigeLevel = prestigeLevels.get(skill.ordinal());
-        int prestigeCap = Rs2Widget.getWidget(162, 55).getText().contains("<img=6>") ? 10 : 7;
-        if (prestigeLevel >= prestigeCap) return false;
-
-        return Rs2Player.getBoostedSkillLevel(skill) >= 99 + prestigeLevel * 2;
-    }
 
     public static void handlePrestige(Skill skill) {
         Rs2Magic.teleportHome();

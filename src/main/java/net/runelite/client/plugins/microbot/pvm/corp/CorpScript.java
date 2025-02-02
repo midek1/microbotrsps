@@ -90,7 +90,7 @@ public class CorpScript extends Script {
             }
         }
 
-        Rs2GameObject.handleTeleportInterface("Boss", "Corporeal Beast");
+        Rs2GameObject.handleNexus("Boss", "Corporeal Beast");
     }
 
     private void handleFighting() {

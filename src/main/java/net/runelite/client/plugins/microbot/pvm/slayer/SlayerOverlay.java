@@ -24,6 +24,7 @@ public class SlayerOverlay extends OverlayPanel {
             panelComponent.getChildren().add(TitleComponent.builder().text("AugSlayer 1.0").color(Color.GREEN).build());
             panelComponent.getChildren().add(LineComponent.builder().left(String.valueOf(SlayerScript.getState())).build());
             panelComponent.getChildren().add(LineComponent.builder().left("Task: " + Microbot.slayerTask).build());
+            panelComponent.getChildren().add(LineComponent.builder().left("Left: " + Microbot.taskRemaining + ", Streak: " + Microbot.slayerStreak).build());
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

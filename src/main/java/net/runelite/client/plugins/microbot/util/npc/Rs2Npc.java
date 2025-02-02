@@ -81,7 +81,6 @@ public class Rs2Npc {
                 .sorted(Comparator.comparingInt(value -> value.getLocalLocation()
                         .distanceTo(Microbot.getClient().getLocalPlayer().getLocalLocation()))));
 
-
         return npcs;
     }
 
@@ -90,7 +89,6 @@ public class Rs2Npc {
                 .filter(x -> x != null && x.getName() != null)
                 .sorted(Comparator.comparingInt(value -> value.getLocalLocation()
                         .distanceTo(Microbot.getClient().getLocalPlayer().getLocalLocation()))));
-
 
         return npcs;
     }
@@ -134,10 +132,11 @@ public class Rs2Npc {
     public static Stream<NPC> getAttackableNpcs() {
         Stream<NPC> npcs = Microbot.getClient().getNpcs().stream()
                 .filter((npc) -> npc.getCombatLevel() > 0 && !npc.isDead())
+                .filter(npc -> !npc.isInteracting() || npc.getInteracting() == Microbot.getClient().getLocalPlayer())
                 .sorted(Comparator.comparingInt(value -> value.getLocalLocation().distanceTo(Microbot.getClient().getLocalPlayer().getLocalLocation())));
-        if (!Rs2Player.isInMulti()) {
+        /*if (!Rs2Player.isInMulti()) {
             npcs = npcs.filter((npc) -> !npc.isInteracting());
-        }
+        }*/
         return npcs;
     }
 
@@ -173,7 +172,7 @@ public class Rs2Npc {
 
     public static Stream<NPC> getAttackableNpcs(String name) {
         return getAttackableNpcs()
-                .filter(x -> x.getName().equalsIgnoreCase(name));
+                .filter(x -> x.getName().toLowerCase().contains(name.toLowerCase()));
     }
 
     public static NPC[] getPestControlPortals() {
@@ -337,15 +336,17 @@ public class Rs2Npc {
     }
 
     public static boolean attack(List<String> npcNames) {
+        List<NPC> validTargets = new ArrayList<>();
+
         for (String npcName : npcNames) {
             NPC npc = getNpc(npcName);
             if (npc == null) continue;
-            if (!hasLineOfSight(npc)) continue;
+            //if (!hasLineOfSight(npc)) continue;
             if (Rs2Combat.inCombat()) continue;
-            if (npc.isInteracting() && npc.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti())
+            if (npc.isInteracting() && npc.getInteracting() != Microbot.getClient().getLocalPlayer()/* && !Rs2Player.isInMulti()*/)
                 continue;
 
-            return interact(npc, "attack");
+            return interact(npcName, "Attack");
         }
         return false;
     }

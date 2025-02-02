@@ -261,11 +261,12 @@ public class MicrobotPlugin extends Plugin {
     @Subscribe
     public void onUpdateServerAndPlayerInfoScript(UpdateServerAndPlayerInfoScript packet) {
         Microbot.donatorAmount = packet.getDonatorPoints();
-        Microbot.prestigeLevels = packet.getPrestigeRanks();
     }
 
     @Subscribe
     private void onUpdateSlayerInfoScript(UpdateSlayerInfoScript packet) {
         Microbot.slayerTask = packet.getTaskName();
+        Microbot.taskRemaining = packet.getTaskAmountRemaining();
+        Microbot.slayerStreak = packet.getTaskStreak();
     }
 }
