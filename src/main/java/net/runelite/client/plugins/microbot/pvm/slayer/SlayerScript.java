@@ -123,6 +123,7 @@ public class SlayerScript extends Script {
     }
 
     private void handleTravel() {
+
         String category = "Slayer";
         String task = Microbot.slayerTask;
 
