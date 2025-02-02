@@ -4,6 +4,8 @@ loads of stuff doesn't work, be careful with what you use
 
 # INSTALLATION
 
+this project does not update the game client, run the launcher after any major game updates.
+
 build.gradle uses a simple flatdir to load the server dependencies, check the file and modify if needed.
 
 if not running in intellij, you'll need to generate the built jar and add it to the classpath before any of the server dependencies
