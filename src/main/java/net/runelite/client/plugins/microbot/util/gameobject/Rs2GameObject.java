@@ -692,24 +692,18 @@ public class Rs2GameObject {
                 return false;
             }
         }
-
         //wait until the interface pops up
         if (!Rs2Widget.sleepUntilHasWidgetText("", 2005, 13, false, 20000))
             return false;
 
         //switch categories if necessary
         if (!Rs2Widget.hasWidgetText(category, 2005, 13, false)) {
-            Widget categoriesWidget = Rs2Widget.getWidget(2005, 15);
-            if (categoriesWidget == null) return false;
+            if (!Rs2Widget.clickWidget(category, Optional.of(2005), 15, false))
+                return false;
 
-            Widget categoryWidget = Rs2Widget.searchChildren(category, categoriesWidget, false);
-            if (categoryWidget == null) return false;
-
-            Rs2Widget.clickWidget(categoryWidget);
             if (!Rs2Widget.sleepUntilHasWidgetText(category, 2005, 15, false, 1000))
                 return false;
         }
-
         //make sure the teleport is in the new list
         if (!Rs2Widget.sleepUntilHasWidgetText(teleport, 2005, 57, true, 1000))
             return false;

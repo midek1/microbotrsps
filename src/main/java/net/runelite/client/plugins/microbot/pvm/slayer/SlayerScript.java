@@ -2,9 +2,7 @@ package net.runelite.client.plugins.microbot.pvm.slayer;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.runelite.api.GameObject;
-import net.runelite.api.ItemID;
-import net.runelite.api.Skill;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -22,7 +20,11 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public class SlayerScript extends Script {
@@ -30,6 +32,8 @@ public class SlayerScript extends Script {
     @Getter
     @Setter
     private static SlayerState state = SlayerState.GETTING_TASK;
+
+    private static List<NPC> attackableNpcs = new ArrayList<>();
 
     public boolean run() {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
@@ -79,8 +83,20 @@ public class SlayerScript extends Script {
         if (Rs2Player.isInteracting() || Rs2Player.isMoving())
             return;
 
-        if (Rs2Npc.attack(taskNpc))
-            sleep(3000);
+        attackableNpcs = Rs2Npc.getAttackableNpcs(false)
+                .filter(npc -> npc.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 30 && npc.getName().equalsIgnoreCase(taskNpc))
+                .sorted(Comparator.comparing((NPC npc) -> npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1)
+                        .thenComparingInt(npc -> Rs2Player.getRs2WorldPoint().distanceToPath(npc.getWorldLocation())))
+                .collect(Collectors.toList());
+
+        if (!attackableNpcs.isEmpty()) {
+            Rs2Npc.attack(attackableNpcs.stream().findFirst().orElse(null));
+            sleep(2000);
+            return;
+        }
+
+        if (!sleepUntil(Rs2Player::isInCombat, 30000))
+            state = SlayerState.TRAVELLING;
     }
 
     private void handlePrayer(String npc) {
@@ -117,6 +133,7 @@ public class SlayerScript extends Script {
         if (task.equalsIgnoreCase("Ethereal Beings")) task = "Dharok the Wretched";
         else if (task.equalsIgnoreCase("Jellies")) task = "Jelly";
         else if (task.equalsIgnoreCase("Giants")) task = "Cyclops";
+        else if (task.equalsIgnoreCase("Spiders")) task = "Temple spider";
         else if (task.endsWith("s") && !task.equalsIgnoreCase("Cyclops")) task = task.substring(0, task.length() - 1);
 
         return task;
@@ -148,6 +165,14 @@ public class SlayerScript extends Script {
             Rs2Player.waitForWalking();
         } else if (task.equalsIgnoreCase("Aberrant Spectres")) {
             Rs2Walker.walkTo(new WorldPoint(2455, 9791, 0));
+            Rs2Player.waitForWalking();
+        } else if (task.equalsIgnoreCase("Spiders")) {
+            Rs2Walker.walkTo(new WorldPoint(1840, 9958, 0));
+            Rs2Player.waitForWalking();
+        } else if (task.equalsIgnoreCase("Green dragons")) {
+            Rs2GameObject.interact(Rs2GameObject.findObjectById(36556, 2199), "Enter");
+            sleep(1200);
+            Rs2Walker.walkTo(new WorldPoint(2610, 9438, 0));
             Rs2Player.waitForWalking();
         }
 
@@ -209,7 +234,9 @@ public class SlayerScript extends Script {
             return 13433;
         }
 
-        if (slayerLevel >= 65) {
+        if (slayerLevel >= 80) {
+            return 15000;
+        } else if (slayerLevel >= 65) {
             return 6797;
         } else if (slayerLevel >= 45) {
             return 403;
