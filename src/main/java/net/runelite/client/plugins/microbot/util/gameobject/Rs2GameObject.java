@@ -2,28 +2,37 @@ package net.runelite.client.plugins.microbot.util.gameobject;
 
 import lombok.SneakyThrows;
 import net.runelite.api.*;
+import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static net.runelite.api.NullObjectID.NULL_34810;
+import static net.runelite.client.plugins.microbot.util.Global.sleep;
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
 /**
@@ -670,6 +679,57 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
         }
 
         return null;
+    }
+
+    public static boolean handleTeleportInterface(String category, String teleport) {
+        if (Rs2Widget.getWidget(2005, 13) == null) {
+
+            Rs2Item portablePortal = Rs2Inventory.get(63353);
+            if (portablePortal != null) {
+                Rs2Inventory.interact(portablePortal, "Teleport");
+            } else {
+                GameObject portalNexus = Rs2GameObject.findObjectById(65527, 2236);
+                if (portalNexus != null && Rs2Player.getWorldLocation().distanceTo(portalNexus.getWorldLocation()) < 20) {
+                    Rs2GameObject.interact(portalNexus, "Teleport");
+                } else {
+                    Rs2Magic.teleportHome();
+                    Rs2GameObject.interact(Rs2GameObject.findObjectById(65527, 2236));
+                }
+            }
+            sleepUntil(() -> Rs2Widget.getWidget(2005, 13) != null);
+        }
+
+        Widget title = Rs2Widget.getWidget(2005, 13);
+        if (title == null) return false;
+
+        if (!title.getText().contains(category)) {
+            Rs2Widget.clickWidget(Rs2Widget.searchChildren(category, Rs2Widget.getWidget(2005, 15), false));
+            sleepUntil(() -> Rs2Widget.getWidget(2005, 13).getText().contains(category));
+        }
+
+        Rectangle teleportBoxBounds = Rs2Widget.getWidget(2005, 55).getBounds();
+        Rectangle teleportButtonBounds = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds();
+        if (teleportBoxBounds == null || teleportButtonBounds == null)
+            return false;
+
+        if (!Rs2UiHelper.isRectangleWithinRectangle(teleportBoxBounds, teleportButtonBounds)) {
+            sleepUntil(() -> Rs2UiHelper.isRectangleWithinRectangle(Rs2Widget.getWidget(2005, 55).getBounds(), Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()), true).getBounds()),
+                    () -> Microbot.getMouse().scrollDown(Rs2UiHelper.getClickingPoint(Rs2Widget.getWidget(2005, 55).getBounds().getBounds(),true)),
+                    5000, 100);
+        }
+
+        sleep(500);
+        Widget nexusTeleport = Rs2Widget.findWidget(teleport, List.of(Rs2Widget.getWidget(2005, 57).getDynamicChildren()));
+        if (!nexusTeleport.getText().toLowerCase().contains(teleport.toLowerCase()))
+            return false;
+
+        if (Rs2Widget.clickWidget(nexusTeleport)) {
+            sleep(600);
+            Rs2Player.waitForAnimation(1200);
+            return true;
+        }
+
+        return false;
     }
 
     public static GameObject findChest() {

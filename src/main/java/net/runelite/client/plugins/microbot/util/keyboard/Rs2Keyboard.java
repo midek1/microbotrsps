@@ -1,7 +1,9 @@
 package net.runelite.client.plugins.microbot.util.keyboard;
 
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.Global;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -20,6 +22,9 @@ public class Rs2Keyboard {
         if (!originalFocusValue) {
             Microbot.getClient().getCanvas().setFocusable(!originalFocusValue);
         }
+
+        if (Rs2Widget.hasWidgetText("Press Enter to Chat", 162, 55, false))
+            enter();
 
         for (int i = 0; i < word.length(); i++) {
             final int randomizer = random(20, 200);

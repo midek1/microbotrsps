@@ -17,6 +17,15 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
 public class Rs2Prayer {
 
+    /**
+     * Enables multiple prayers, and will keep them on
+     * @param names
+     */
+    public static void enable(Rs2PrayerEnum... names) {
+        for (Rs2PrayerEnum prayer : names)
+            toggle(prayer, true);
+    }
+
     public static void toggle(Rs2PrayerEnum name) {
         Microbot.doInvoke(new NewMenuEntry(-1, name.getIndex(), MenuAction.CC_OP.getId(), 1,-1, "Activate"), new Rectangle(1, 1, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
         // Rs2Reflection.invokeMenu(-1, name.getIndex(), MenuAction.CC_OP.getId(), 1,-1, "Activate", "", -1, -1);

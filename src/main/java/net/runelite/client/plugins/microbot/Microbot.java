@@ -22,10 +22,13 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.configs.SpecialAttackConfigs;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.mouse.Mouse;
 import net.runelite.client.plugins.microbot.util.mouse.naturalmouse.NaturalMouse;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 import net.runelite.client.ui.overlay.worldmap.WorldMapOverlay;
@@ -69,6 +72,9 @@ public class Microbot {
     public static boolean enableAutoRunOn = true;
     public static boolean useStaminaPotsIfNeeded = true;
     public static int runEnergyThreshold = 1000;
+    public static int donatorAmount = 0;
+    public static Map<String, Integer> augustTimers = new HashMap<>();
+    public static Map<Integer, Integer> prestigeLevels = new HashMap<>();
     @Getter
     @Setter
     public static NaturalMouse naturalMouse;
@@ -129,8 +135,27 @@ public class Microbot {
 
     public static int cantReachTargetRetries = 0;
 
+    public static String slayerTask = null;
+
     @Getter
     public static HashMap<String, Integer> scriptRuntimes = new HashMap<>();
+
+    public static boolean canPrestige(Skill skill) {
+        if (prestigeLevels.isEmpty()) return false;
+
+        int prestigeLevel = prestigeLevels.get(skill.ordinal());
+        int prestigeCap = Rs2Widget.getWidget(162, 55).getText().contains("<img=6>") ? 10 : 7;
+        if (prestigeLevel >= prestigeCap) return false;
+
+        return Rs2Player.getBoostedSkillLevel(skill) >= 99 + prestigeLevel * 2;
+    }
+
+    public static void handlePrestige(Skill skill) {
+        Rs2Magic.teleportHome();
+        Rs2Npc.interact(Rs2Npc.getNpc(15009), "Prestige-info");
+
+        sleepUntil(() -> Rs2Widget.getWidget(2009, 14) != null);
+    }
 
     public static boolean isDebug() {
         return java.lang.management.ManagementFactory.getRuntimeMXBean().

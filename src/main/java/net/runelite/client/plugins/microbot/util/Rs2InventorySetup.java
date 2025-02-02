@@ -18,6 +18,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleep;
+import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
 /**
  * Utility class for managing inventory setups in the Microbot plugin.
@@ -178,6 +179,10 @@ public class Rs2InventorySetup {
             Rs2Bank.depositAllExcept(itemsToNotDeposit());
         }
 
+        Rs2Bank.setWithdrawAsItem();
+
+        //List<String> itemsToEquip = new ArrayList<>();
+
         for (InventorySetupsItem inventorySetupsItem : inventorySetup.getEquipment()) {
             if (isMainSchedulerCancelled()) break;
             if (InventorySetupsItem.itemIsDummy(inventorySetupsItem)) continue;
@@ -195,26 +200,36 @@ public class Rs2InventorySetup {
                     continue;
 
                 if (inventorySetupsItem.getQuantity() > 1) {
-                    Rs2Bank.withdrawAllAndEquip(inventorySetupsItem.getName());
+                    Rs2Bank.withdrawAll(inventorySetupsItem.getName());
+                    //itemsToEquip.add(inventorySetupsItem.getName());
                     sleep(100, 250);
                 } else {
-                    Rs2Bank.withdrawAndEquip(inventorySetupsItem.getName());
+                    Rs2Bank.withdrawOne(inventorySetupsItem.getName());
+                    //itemsToEquip.add(inventorySetupsItem.getName());
                     sleep(100, 250);
                 }
             } else {
                 if (inventorySetupsItem.getId() == -1 || !Rs2Bank.hasItem(inventorySetupsItem.getName()))
                     continue;
                 if (Rs2Inventory.hasItem(inventorySetupsItem.getName())) {
-                    Rs2Bank.wearItem(inventorySetupsItem.getName());
+                    //itemsToEquip.add(inventorySetupsItem.getName());
                     continue;
                 }
                 if (inventorySetupsItem.getQuantity() > 1) {
-                    Rs2Bank.withdrawAllAndEquip(inventorySetupsItem.getName());
+                    Rs2Bank.withdrawAll(inventorySetupsItem.getName());
+                    //itemsToEquip.add(inventorySetupsItem.getName());
                     sleep(100, 250);
                 } else {
-                    Rs2Bank.withdrawAndEquip(inventorySetupsItem.getName());
+                    Rs2Bank.withdrawOne(inventorySetupsItem.getName());
+                    //itemsToEquip.add(inventorySetupsItem.getName());
                 }
             }
+        }
+
+        if (!doesEquipmentMatch()) {
+            Rs2Bank.closeBank();
+            sleep(800);
+            wearEquipment();
         }
 
         sleep(1000);

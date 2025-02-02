@@ -418,8 +418,7 @@ public class BanksBankStanderScript extends Script {
             }
         }
         sleep(calculateSleepDuration());
-
-        return false;
+        return true;
     }
 
     private int calculateSleepDuration() {

@@ -32,6 +32,8 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 @Slf4j
 public class Rs2GroundItem {
 
+    public static final String[] globalDrops = {"flask", "lamp", "bond", "noxifer", "buchu", "cicely", "Talent respec token", "zenyte"};
+
     private static boolean interact(RS2Item rs2Item, String action) {
         if (rs2Item == null) return false;
         try {
@@ -412,6 +414,14 @@ public class Rs2GroundItem {
             coreLoot(groundItem);
         }
         return validateLoot(filter);
+    }
+
+    public static void lootGlobalDrops() {
+        LootingParameters globalLootingParameters = new LootingParameters(15, globalDrops);
+        LootingParameters boneLootingParameters = new LootingParameters(15, 1, 100, 1, false, false, "bones");
+
+        lootItemsBasedOnNames(globalLootingParameters);
+        lootItemsBasedOnNames(boneLootingParameters);
     }
 
 

@@ -320,6 +320,20 @@ public class Rs2Magic {
         }
     }
 
+    public static void teleportHome() {
+        sleepUntil(() -> {
+            Rs2Tab.switchToMagicTab();
+            sleep(50, 150);
+            return Rs2Tab.getCurrentTab() == InterfaceTab.MAGIC;
+        });
+        Widget homeTeleport = Rs2Widget.findWidget("Home Teleport");
+        if (homeTeleport != null) {
+            Rs2Widget.clickWidget(homeTeleport);
+            sleep(1200);
+            sleepUntil(() -> !Rs2Player.isAnimating(1200));
+        }
+    }
+
     public static boolean npcContact(String npcName) {
         if (!isLunar()) {
             Microbot.log("Tried casting npcContact, but lunar spellbook was not found.");

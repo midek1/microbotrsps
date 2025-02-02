@@ -1,5 +1,8 @@
 package net.runelite.client.plugins.microbot;
 
+import custom.UpdateServerAndPlayerInfoScript;
+import custom.UpdateSlayerInfoScript;
+import custom.UpdateTimerScript;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
@@ -19,6 +22,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginInstantiationException;
 import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.microbot.pvm.slayer.SlayerScript;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -195,6 +199,9 @@ public class MicrobotPlugin extends Plugin {
         if (event.getType() == ChatMessageType.GAMEMESSAGE && event.getMessage().toLowerCase().contains("you can't log into a non-members")) {
             Microbot.cantHopWorld = true;
         }
+        if (event.getType().equals(ChatMessageType.GAMEMESSAGE) && event.getMessage().toLowerCase().contains("you cannot attack npcs off slayer task")) {
+            Microbot.slayerTask = null;
+        }
     }
 
     @SneakyThrows
@@ -244,5 +251,21 @@ public class MicrobotPlugin extends Plugin {
                 }
             }
         }
+    }
+
+    @Subscribe
+    private void onUpdateTimerScript(UpdateTimerScript event) {
+        Microbot.augustTimers.put(event.getName(), event.getTicksRemaining());
+    }
+
+    @Subscribe
+    public void onUpdateServerAndPlayerInfoScript(UpdateServerAndPlayerInfoScript packet) {
+        Microbot.donatorAmount = packet.getDonatorPoints();
+        Microbot.prestigeLevels = packet.getPrestigeRanks();
+    }
+
+    @Subscribe
+    private void onUpdateSlayerInfoScript(UpdateSlayerInfoScript packet) {
+        Microbot.slayerTask = packet.getTaskName();
     }
 }

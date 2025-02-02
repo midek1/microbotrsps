@@ -56,7 +56,7 @@ public class LocationOverlay extends OverlayPanel {
         WorldPoint worldPoint = client.getLocalPlayer().getWorldLocation();
         LocalPoint localPoint = client.getLocalPlayer().getLocalLocation();
 
-        if (client.isInInstancedRegion()) {
+        if (client.getTopLevelWorldView().isInstance()) {
             worldPoint = WorldPoint.fromLocalInstance(client, localPoint);
 
             panelComponent.getChildren().add(LineComponent.builder()

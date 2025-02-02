@@ -146,6 +146,38 @@ public class Rs2Player {
             }
         }
     }
+
+    public static void handleCustom() {
+        handleOverload();
+        handlePrayerEnhance();
+        handleRockCake();
+    }
+
+    public static void handleOverload() {
+        int ticksRemaining = Microbot.augustTimers.get("Overload");
+        if (ticksRemaining == 0 && Rs2Inventory.hasUnNotedItem("Overload", false)
+                && Rs2Player.getBoostedSkillLevel(Skill.HITPOINTS) > 50) {
+            Rs2Inventory.interact("Overload", "Drink", false);
+        }
+    }
+
+    public static void handlePrayerEnhance() {
+        int ticksRemaining = Microbot.augustTimers.get("Prayer Renewal");
+        if (ticksRemaining == 0 && Rs2Inventory.hasUnNotedItem("Prayer Renewal"))
+            Rs2Inventory.interact("Prayer Renewal", "Drink", false);
+    }
+
+    public static void handleRockCake() {
+        int currentHp = Rs2Player.getBoostedSkillLevel(Skill.HITPOINTS);
+
+        //only rock cake after consuming overload and taking its damage)
+        int overloadTicksLeft = Microbot.augustTimers.get("Overload");
+        if (overloadTicksLeft == 0 || overloadTicksLeft > 565) return;
+
+        if (currentHp > 30) {
+            Rs2Inventory.interact("Rock cake", "Eat", false);
+        }
+    }
     
     /**
      * Handles updates to the teleblock timer based on changes to the {@link Varbits#TELEBLOCK} varbit.
@@ -712,13 +744,13 @@ public class Rs2Player {
      * @return worldpoint
      */
     public static WorldPoint getWorldLocation() {
-        if (Microbot.getClient().isInInstancedRegion()) {
+        /*if (Microbot.getClient().isInInstancedRegion()) {
             LocalPoint l = LocalPoint.fromWorld(Microbot.getClient(), Microbot.getClient().getLocalPlayer().getWorldLocation());
             WorldPoint playerInstancedWorldLocation = WorldPoint.fromLocalInstance(Microbot.getClient(), l);
             return playerInstancedWorldLocation;
-        } else {
+        } else {*/
             return Microbot.getClient().getLocalPlayer().getWorldLocation();
-        }
+        //}
     }
 
     /**

@@ -70,6 +70,16 @@ public abstract class Script implements IScript {
         Global.sleep(start, end);
     }
 
+    /**
+     * sleeps for a specified number of game ticks
+     * @param ticksToWait
+     * @return
+     */
+    public boolean sleepUntilTick(int ticksToWait) {
+        int startTick = Microbot.getClient().getTickCount();
+        return Global.sleepUntil(() -> Microbot.getClient().getTickCount() >= startTick + ticksToWait, ticksToWait * 600 + 2000);
+    }
+
     public boolean sleepUntil(BooleanSupplier awaitedCondition) {
         return Global.sleepUntil(awaitedCondition, 5000);
     }

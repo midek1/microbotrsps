@@ -6,6 +6,10 @@ public class LootingParameters {
     private boolean delayedLooting, antiLureProtection;
     private String[] names;
 
+    public LootingParameters(int range, String[] names) {
+        setValues(0, 0, 10, 1, 1, 0, false, false, names);
+    }
+
     /**
      * This constructor is used to create a new LootingParameters object.
      * It sets the minimum value, maximum value, range, minimum items, delayed looting, and anti-lure protection.

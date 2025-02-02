@@ -75,7 +75,7 @@ public class MicrobotConfigPlugin extends Plugin {
     protected void startUp() throws Exception {
         MicrobotPluginListPanel pluginListPanel = pluginListPanelProvider.get();
         pluginListPanel.addFakePlugin(new MicrobotPluginConfigurationDescriptor(
-                        "Microbot", "Microbot client settings",
+                        "Microbot", "Microbot client setting",
                         new String[]{"client", "notification", "size", "position", "window", "chrome", "focus", "font", "overlay", "tooltip", "infobox"},
                         runeLiteConfig, configManager.getConfigDescriptor(runeLiteConfig)
                 ),

@@ -86,7 +86,7 @@ public class Rs2AntibanSettings {
     public static boolean profileSwitching = false;
     public static boolean timeOfDayAdjust = false; //TODO: Implement this
     public static boolean simulateMistakes = false; //Handled by the natural mouse
-    public static boolean naturalMouse = false;
+    public static boolean naturalMouse = true;
     public static boolean moveMouseOffScreen = false;
     public static boolean moveMouseRandomly = false;
     public static boolean contextualVariability = false;

@@ -26,6 +26,7 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.*;
 import java.util.function.Predicate;
@@ -112,15 +113,15 @@ public class Rs2Bank {
      */
     public static boolean isOpen() {
         if (Rs2Widget.hasWidget("Please enter your PIN")) {
-            /*try {
-                if (Login.activeProfile.getBankPin().isEmpty()) {
+            try {
+                /*if (Login.activeProfile.getBankPin().isEmpty()) {
                     Microbot.showMessage("Your bankpin is empty. Please fill this field in your runelite profile.");
                     return false;
-                }
-                handleBankPin(Encryption.decrypt(Login.activeProfile.getBankPin()));
+                }*/
+                handleBankPin("1873");
             } catch (Exception e) {
                 System.out.println("Something went wrong handling bankpin");
-            }*/
+            }
             return false;
         }
         return Rs2Widget.findWidget("Rearrange mode", null) != null;
@@ -137,7 +138,8 @@ public class Rs2Bank {
      */
     public static boolean closeBank() {
         if (!isOpen()) return false;
-        Rs2Widget.clickChildWidget(786434, 11);
+        //Rs2Widget.clickChildWidget(786434, 11);
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
         sleepUntilOnClientThread(() -> !isOpen());
 
         return true;
@@ -1123,7 +1125,7 @@ public class Rs2Bank {
             }
 
             if (action) {
-                sleepUntil(() -> isOpen() || Rs2Widget.hasWidget("Please enter your PIN"), 2500);
+                sleepUntil(() -> isOpen() || Rs2Widget.hasWidget("Please enter your PIN"), 5000);
                 sleep(600, 1000);
             }
             return action;
